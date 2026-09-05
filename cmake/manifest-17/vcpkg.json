@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "skyhudmenu-17",
-  "version-string": "1.0.0",
+  "version-string": "1.0.1",
   "description": "An in-game settings menu (Apocrypha Menu Framework) for editing SkyHUD's skyhud.txt - hide, scale and move HUD elements without leaving the game. Companion to SkyHUD; ships no SkyHUD content. [Skyrim 1.7.x build line: CommonLibSSE-NG 7.2.0, cmake/ports-17]",
   "homepage": "https://github.com/ApocryphaRealm/SkyHudMenu",
   "license": "MIT",
@@ -9,3 +9,4 @@
   ],
   "builtin-baseline": "127402f1c75bb3d5ff6bce04b285faa4930a5aca"
 }
+
