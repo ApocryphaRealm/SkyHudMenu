@@ -5,6 +5,7 @@
 #include "HudPreview.h"
 #include "Settings.h"
 #include "SkyHudState.h"
+#include "utils/Toggle.h"
 #include "utils/Logger.h"
 
 #include <charconv>
@@ -87,7 +88,7 @@ namespace UI
 		void ToggleControl(const skyhud::ToggleField& a_t)
 		{
 			bool on = ValueAsBool(a_t.section, a_t.key);
-			if (ImGuiMCP::Checkbox(a_t.label, &on)) {
+			if (ImGuiMCP::Toggle(a_t.label, &on)) {
 				state::Config().Set(a_t.section, a_t.key, on ? "1" : "0");
 			}
 		}
@@ -115,7 +116,7 @@ namespace UI
 			auto& ghosts = settings::preview::Ghosts();
 			if (a_index < ghosts.size()) {
 				bool gshow = ghosts[a_index].show;
-				if (ImGuiMCP::Checkbox("Show this ghost on screen", &gshow)) {
+				if (ImGuiMCP::Toggle("Show this ghost on screen", &gshow)) {
 					ghosts[a_index].show = gshow;
 					settings::Save();
 				}
@@ -140,7 +141,7 @@ namespace UI
 			}
 			if (a_el.lockKey && a_el.lockKey[0]) {
 				bool locked = ValueAsBool("Position", a_el.lockKey);
-				if (ImGuiMCP::Checkbox("Locked (use SkyHUD's default position)", &locked)) {
+				if (ImGuiMCP::Toggle("Locked (use SkyHUD's default position)", &locked)) {
 					state::Config().Set("Position", a_el.lockKey, locked ? "1" : "0");
 				}
 				if (!locked && !a_el.positions.empty()) {
@@ -192,7 +193,7 @@ namespace UI
 		ImGuiMCP::TextDisabled("Each tab is one HUD element. Changes are written to skyhud.txt and "
 							   "applied on Save; SkyHUD re-reads it when the HUD reloads.");
 
-		if (ImGuiMCP::Checkbox("Show on-screen position markers", &settings::preview::show)) {
+		if (ImGuiMCP::Toggle("Show on-screen position markers", &settings::preview::show)) {
 			settings::Save();
 		}
 		ImGuiMCP::SameLine(0.0F, 8.0F);
