@@ -221,7 +221,10 @@ namespace UI
 
 		preview::DrawAll();
 
-		if (ImGuiMCP::BeginTabBar("SkyHudElements")) {
+		// Nineteen element tabs do not fit the default window width; scrolling keeps every label whole
+		// (the default policy squeezes them to "H... M... St..."), and the list button on the left opens
+		// every tab by name.
+		if (ImGuiMCP::BeginTabBar("SkyHudElements", ImGuiMCP::ImGuiTabBarFlags_FittingPolicyScroll | ImGuiMCP::ImGuiTabBarFlags_TabListPopupButton)) {
 			const auto& els = skyhud::Elements();
 			for (std::size_t i = 0; i < els.size(); ++i) {
 				if (!ElementPresent(els[i])) {

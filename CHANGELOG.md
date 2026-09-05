@@ -3,6 +3,11 @@ Added an in-game settings page for SkyHUD, one tab per HUD element, that reads a
 Added a live on-screen marker showing where each element will sit, sized to roughly match the widget and moving as you adjust it.
 Added per-element control of each marker's visibility and colour, with Health, Stamina and Magicka defaulting to their bar colours, plus a master on/off toggle.
 
+## 1.0.3 - 2026-09-05 - untested
+
+### Fixed
+- The element tabs no longer squeeze their labels to a letter or two when the window is narrow: the tab bar scrolls, keeping every name whole, and a list button at its left opens any tab by name.
+
 ## 1.0.2 - 2026-09-05 - working
 
 ### Fixed

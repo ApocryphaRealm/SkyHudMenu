@@ -1,6 +1,6 @@
 SkyHUD Settings Menu
 ====================
-Version 1.0.2
+Version 1.0.3
 
 An in-game settings menu for SkyHUD. It puts SkyHUD's hide / scale / move options - the ones you
 normally edit by hand in skyhud.txt - onto a real settings page in the Apocrypha Menu Framework,
