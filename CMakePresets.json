@@ -134,6 +134,23 @@
             ],
             "displayName": "RelWithDebInfo (VR only)",
             "binaryDir": "${sourceDir}/build/relwithdebinfo-vr-only"
+        },
+        {
+            "name": "build-relwithdebinfo-17",
+            "inherits": [
+                "build-relwithdebinfo",
+                "commonlibsse-se-only"
+            ],
+            "displayName": "RelWithDebInfo (Skyrim 1.7.x line - CommonLibSSE-NG 7.2.0)",
+            "binaryDir": "${sourceDir}/build/relwithdebinfo-17",
+            "cacheVariables": {
+                "VCPKG_OVERLAY_PORTS": "${sourceDir}/cmake/ports-17/",
+                "VCPKG_MANIFEST_DIR": "${sourceDir}/cmake/manifest-17",
+                "RUNTIME_LINE": {
+                    "type": "STRING",
+                    "value": "17"
+                }
+            }
         }
     ],
     "buildPresets": [
@@ -166,6 +183,11 @@
             "name": "relwithdebinfo-all",
             "displayName": "RelWithDebInfo (All)",
             "configurePreset": "build-relwithdebinfo-all"
+        },
+        {
+            "name": "relwithdebinfo-17",
+            "displayName": "RelWithDebInfo (Skyrim 1.7.x line)",
+            "configurePreset": "build-relwithdebinfo-17"
         }
     ]
 }
