@@ -1,6 +1,7 @@
 #include "DevBenchTool.h"
 
 #include "DevBench/DevBenchAPI.h"
+#include "HudPreview.h"
 #include "HudReload.h"
 #include "SkyHudState.h"
 #include "utils/Logger.h"
@@ -78,7 +79,15 @@ namespace DevBenchTool
 			}
 			if (op == "hudreload") {
 				const bool ok = hudreload::Request();
-				a_write(a_sink, std::format(R"({{"ok":{},"op":"hudreload"}})", ok ? "true" : "false").c_str());
+				a_write(a_sink, std::format(R"({{"ok":{},"op":"hudreload","pendingSaves":{},"note":"no live reload exists; SkyHUD reads the file at game start"}})", ok ? "true" : "false", hudreload::PendingSaves()).c_str());
+				return;
+			}
+			if (op == "hudinfo") {
+				a_write(a_sink, std::format(R"({{"ok":true,"op":"hudinfo","pendingSaves":{}}})", hudreload::PendingSaves()).c_str());
+				return;
+			}
+			if (op == "clips") {
+				a_write(a_sink, std::format(R"({{"ok":true,"op":"clips","clips":{}}})", preview::LiveReport()).c_str());
 				return;
 			}
 			a_write(a_sink, R"({"ok":false,"error":"unknown op"})");
@@ -102,9 +111,10 @@ namespace DevBenchTool
 			"{"
 			"\"description\":\"Drive the SkyHUD config editor for testing. op=state reports whether "
 			"skyhud.txt loaded, its path and line count. op=get {section,key} reads a value. "
-			"op=set {section,key,value} changes one in memory. op=save writes skyhud.txt and asks "
+			"op=set {section,key,value} changes one in memory. op=save writes skyhud.txt and reloads "
 			"the HUD to reload. op=reload re-reads skyhud.txt from disk. op=hudreload just forces "
-			"the HUD reload (to test whether SkyHUD re-reads live).\","
+			"nothing live (SkyHUD reads the file at game start). op=hudinfo reports the saves waiting for a restart. "
+			"op=clips reads every known widget's live position, bounds and scale from the HUD movie.\","
 			"\"inputSchema\":{\"type\":\"object\",\"properties\":{\"op\":{\"type\":\"string\"},"
 			"\"section\":{\"type\":\"string\"},\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}},"
 			"\"readOnly\":false"

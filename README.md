@@ -1,6 +1,6 @@
 SkyHUD Settings Menu
 ====================
-Version 1.0.0
+Version 1.0.2
 
 An in-game settings menu for SkyHUD. It puts SkyHUD's hide / scale / move options - the ones you
 normally edit by hand in skyhud.txt - onto a real settings page in the Apocrypha Menu Framework,
@@ -18,21 +18,29 @@ WHAT IT DOES
   Objective text, Level-up meter, Animated letters, Clock) plus a General tab.
 - Each tab gathers that element's scale, lock and X/Y position, and its SkyHUD options in one
   place, reading and writing your skyhud.txt.
-- A live on-screen preview: a labelled marker for every element you have positioned, drawn at the
-  spot it will occupy, sized to roughly match the widget's shape, and moving in real time as you
-  drag the sliders.
+- A live on-screen preview: a labelled marker for every element you have positioned - every
+  position pair of it (the charge meters have three, the activate prompt four) - moving in real
+  time as you drag the sliders. Where the live HUD movie exposes the widget, the marker is
+  anchored from where that widget really sits: it starts exactly on the widget and moves by
+  exactly what you change, whatever the element's own anchor point. A widget the movie does not
+  expose gets a representative box centred on its X/Y.
   * Per element you can turn its marker on or off and pick its colour. Health, Stamina and Magicka
     default to their bar colours (red, green, blue); everything else defaults to gold.
   * A master toggle turns the whole preview on or off.
   * The markers show whether the menu is open or closed, so you can see the layout while playing.
+- HUD replacers that add their own SkyHUD keys are picked up from your file: with Dragonborn UI's
+  skyhud.txt a Shout meter tab (scale, lock, position, separate shout meter) and the Hide compass /
+  Hide level-up meter options appear; a control whose key your file does not have is not shown.
 
 
-HONEST LIMITATION - CHANGES APPLY ON THE NEXT HUD LOAD
-------------------------------------------------------
-SkyHUD only reads skyhud.txt when the HUD movie loads, so a change you save takes effect the next
-time the HUD reloads (load a save) - it does not move the real widget the instant you change it.
-That is why the on-screen marker exists: it shows you exactly where an element will go, live, so
-you can dial it in before you commit, and the widget snaps there on your next load.
+HONEST LIMITATION - CHANGES SHOW AFTER A RESTART
+------------------------------------------------
+SkyHUD reads skyhud.txt once, when the game starts, and there is no way to make it read the file
+again while the game runs: hiding and showing the HUD does not rebuild it, loading a save does not
+either, and forcing the engine to rebuild the HUD menu moved nothing and crashed the game (measured
+2026-09-05), so this mod does not try. A change you save takes effect the next time you start the
+game. That is why the on-screen marker exists: it shows you exactly where an element will go,
+live, so you can dial it in before you commit, and the widget is there after the restart.
 
 
 REQUIREMENTS
@@ -50,7 +58,7 @@ HOW TO USE
 2. In game, open the Apocrypha Menu Framework menu and pick SkyHUD Settings Menu.
 3. Choose an element's tab, unlock it, and set its scale / position; the gold (or coloured) marker
    shows where it lands. Turn each element's marker on/off and set its colour on its tab.
-4. Press Save. Load a save (or let the HUD reload) for the change to take effect in SkyHUD.
+4. Press Save, then restart the game: SkyHUD reads the file when the game starts.
 
 
 COMPATIBILITY

@@ -51,6 +51,21 @@ namespace UI
 			return s;
 		}
 
+		bool HasKey(const char* a_section, const char* a_key)
+		{
+			return a_key && a_key[0] && state::Config().Get(a_section, a_key).has_value();
+		}
+
+		// Whether any control on this tab exists in the user's file.
+		bool ElementPresent(const skyhud::Element& a_el)
+		{
+			if (HasKey("Scale", a_el.scaleKey) || HasKey("Position", a_el.lockKey)) { return true; }
+			for (const auto& p : a_el.positions) { if (HasKey("Position", p.xKey) || HasKey("Position", p.yKey)) { return true; } }
+			for (const auto& t : a_el.toggles) { if (HasKey(t.section, t.key)) { return true; } }
+			for (const auto& d : a_el.dropdowns) { if (HasKey(d.section, d.key)) { return true; } }
+			return false;
+		}
+
 		bool ValueAsBool(const std::string& a_section, const std::string& a_key)
 		{
 			const auto v = state::Config().Get(a_section, a_key);
@@ -68,15 +83,16 @@ namespace UI
 
 		void PositionControl(const skyhud::PosPair& a_pos)
 		{
+			if (!HasKey("Position", a_pos.xKey) && !HasKey("Position", a_pos.yKey)) { return; }
 			ImGuiMCP::TextDisabled("%s", a_pos.label);
-			if (a_pos.xKey && a_pos.xKey[0]) {
+			if (HasKey("Position", a_pos.xKey)) {
 				float x = ValueAsFloat("Position", a_pos.xKey, 0.0F);
 				const std::string lbl = std::string("X##") + a_pos.xKey;
 				if (ImGuiMCP::InputFloat(lbl.c_str(), &x, 1.0F, 10.0F, "%.0f")) {
 					state::Config().Set("Position", a_pos.xKey, FloatToValue(x));
 				}
 			}
-			if (a_pos.yKey && a_pos.yKey[0]) {
+			if (HasKey("Position", a_pos.yKey)) {
 				float y = ValueAsFloat("Position", a_pos.yKey, 0.0F);
 				const std::string lbl = std::string("Y##") + a_pos.yKey;
 				if (ImGuiMCP::InputFloat(lbl.c_str(), &y, 1.0F, 10.0F, "%.0f")) {
@@ -87,6 +103,7 @@ namespace UI
 
 		void ToggleControl(const skyhud::ToggleField& a_t)
 		{
+			if (!HasKey(a_t.section, a_t.key)) { return; }
 			bool on = ValueAsBool(a_t.section, a_t.key);
 			if (ImGuiMCP::Toggle(a_t.label, &on)) {
 				state::Config().Set(a_t.section, a_t.key, on ? "1" : "0");
@@ -95,6 +112,7 @@ namespace UI
 
 		void DropdownControl(const skyhud::DropdownField& a_d)
 		{
+			if (!HasKey(a_d.section, a_d.key)) { return; }
 			const auto current = state::Config().Get(a_d.section, a_d.key).value_or("");
 			int         index = 0;
 			std::vector<const char*> labels;
@@ -136,10 +154,10 @@ namespace UI
 				}
 				ImGuiMCP::Separator();
 			}
-			if (a_el.scaleKey && a_el.scaleKey[0]) {
+			if (HasKey("Scale", a_el.scaleKey)) {
 				ScaleControl(a_el.scaleKey);
 			}
-			if (a_el.lockKey && a_el.lockKey[0]) {
+			if (HasKey("Position", a_el.lockKey)) {
 				bool locked = ValueAsBool("Position", a_el.lockKey);
 				if (ImGuiMCP::Toggle("Locked (use SkyHUD's default position)", &locked)) {
 					state::Config().Set("Position", a_el.lockKey, locked ? "1" : "0");
@@ -151,7 +169,9 @@ namespace UI
 					}
 				}
 			}
-			if (!a_el.toggles.empty()) {
+			bool anyToggle = false;
+			for (const auto& t : a_el.toggles) { anyToggle |= HasKey(t.section, t.key); }
+			if (anyToggle) {
 				ImGuiMCP::SeparatorText("Options");
 				for (const auto& t : a_el.toggles) {
 					ToggleControl(t);
@@ -190,8 +210,8 @@ namespace UI
 		}
 
 		ImGuiMCP::TextWrapped("Editing %s", state::Config().path().c_str());
-		ImGuiMCP::TextDisabled("Each tab is one HUD element. Changes are written to skyhud.txt and "
-							   "applied on Save; SkyHUD re-reads it when the HUD reloads.");
+		ImGuiMCP::TextDisabled("Each tab is one HUD element. Save writes skyhud.txt; SkyHUD reads it when the "
+							   "game starts, so a saved change shows after a restart.");
 
 		if (ImGuiMCP::Toggle("Show on-screen position markers", &settings::preview::show)) {
 			settings::Save();
@@ -204,6 +224,9 @@ namespace UI
 		if (ImGuiMCP::BeginTabBar("SkyHudElements")) {
 			const auto& els = skyhud::Elements();
 			for (std::size_t i = 0; i < els.size(); ++i) {
+				if (!ElementPresent(els[i])) {
+					continue;  // none of its keys are in this file
+				}
 				if (ImGuiMCP::BeginTabItem(els[i].name)) {
 					RenderElement(els[i], i);
 					ImGuiMCP::EndTabItem();
@@ -213,10 +236,10 @@ namespace UI
 		}
 
 		ImGuiMCP::SeparatorText("");
-		ImGuiMCP::TextDisabled("SkyHUD reads skyhud.txt when the HUD loads, so saved changes take effect");
-		ImGuiMCP::TextDisabled("on your next load - the on-screen marker shows where each element will go.");
-		if (ImGuiMCP::Button("Save (applies on next HUD load)")) {
-			g_status = state::WriteAndApply() ? "Saved to skyhud.txt. It applies when the HUD next reloads (load a save)."
+		ImGuiMCP::TextDisabled("SkyHUD reads skyhud.txt only when the game starts, so a saved change shows after a");
+		ImGuiMCP::TextDisabled("restart - the markers show now where each element will land.");
+		if (ImGuiMCP::Button("Save (shows after a restart)")) {
+			g_status = state::WriteAndApply() ? "Saved to skyhud.txt. Restart the game to see it in the HUD."
 											  : "Could not write skyhud.txt. See the log.";
 		}
 		if (ImGuiMCP::Button("Reload from file")) {

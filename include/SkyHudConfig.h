@@ -46,7 +46,8 @@ namespace skyhud
 		[[nodiscard]] bool loaded() const noexcept { return _loaded; }
 		[[nodiscard]] const std::string& path() const noexcept { return _path; }
 
-		// Current value of section/key, if present.
+		// Current value of section/key, if present. Section "*" means any section - for keys a HUD
+		// replacer adds on top of SkyHUD's, whose section only that replacer's file knows.
 		[[nodiscard]] std::optional<std::string> Get(const std::string& a_section, const std::string& a_key) const;
 
 		// Set section/key to a_value in memory. Returns false if that section/key is not in the

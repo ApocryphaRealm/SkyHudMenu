@@ -1,11 +1,20 @@
 #pragma once
 
-// Making SkyHUD re-read skyhud.txt at runtime. SkyHUD reads its config only when the HUD movie
-// initialises, so after writing skyhud.txt this asks the HUD to reload. There is no documented
-// SkyHUD reload API, so this uses the engine's own path (recreate the HUD menu) and logs the
-// outcome - it is the one part of this mod that must be proven in game.
+#include <cstdint>
+
+// SkyHUD reads skyhud.txt once, when its HUD movie initialises at game start, and there is no
+// documented way to make it read again. Measured 2026-09-05: hiding and showing the HUD menu does
+// not recreate its movie (the menu is flagged always-open), a save load does not either, and
+// forcing the engine to rebuild the HUD menu (clearing that flag, hide, show) did not move a
+// widget and crashed the game on the second rebuild inside the quest-marker code. So this mod
+// does not try: a saved change takes effect the next time the game starts, and the page and the
+// on-screen markers say so.
 namespace hudreload
 {
-	// Returns true if the reload request was dispatched (not a guarantee SkyHUD re-read).
+	// Records that a change is waiting for the next game start. Always returns false: nothing is
+	// reloaded live.
 	bool Request();
+
+	// How many saves this session are waiting for a restart.
+	int PendingSaves();
 }

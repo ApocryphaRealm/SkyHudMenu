@@ -14,25 +14,26 @@ namespace skyhud
 
 		static const std::vector<Element> kElements = {
 			{ "Health", "fHealth", "bLockHealthMeter",
-			  { { "Position", "fHealthPosX", "fHealthPosY" } },
+			  { { "Position", "fHealthPosX", "fHealthPosY", "Health", "Health.HealthMeter_mc" } },
 			  { { "Alternative style (left-aligned)", "Interface", "bAltHealth" } }, {} },
 
 			{ "Magicka", "fMagica", "bLockMagickaMeter",
-			  { { "Position", "fMagicaPosX", "fMagicaPosY" } }, {}, {} },
+			  { { "Position", "fMagicaPosX", "fMagicaPosY", "Magica", "Magica.MagickaMeter_mc" } }, {}, {} },
 
 			{ "Stamina", "fStamina", "bLockStaminaMeter",
-			  { { "Position", "fStaminaPosX", "fStaminaPosY" } },
+			  { { "Position", "fStaminaPosX", "fStaminaPosY", "Stamina", "Stamina.StaminaMeter_mc" } },
 			  { { "Alternative style (left-aligned)", "Interface", "bAltStamina" } }, {} },
 
 			{ "Charge meters", "fChargeMeter", "bLockLeftChargeMeter",
-			  { { "Left", "fLeftChargeMeterPosX", "fLeftChargeMeterPosY" },
-				{ "Right", "fRightChargeMeterPosX", "fRightChargeMeterPosY" },
-				{ "Alt", "fAltChargeMeterPosX", "fAltChargeMeterPosY" } },
+			  { { "Left", "fLeftChargeMeterPosX", "fLeftChargeMeterPosY", "BottomLeftLockInstance.LeftHandChargeMeterInstance", "BottomLeftLockInstance.LeftHandChargeMeterInstance.ChargeMeter_mc" },
+				{ "Right", "fRightChargeMeterPosX", "fRightChargeMeterPosY", "BottomRightLockInstance.RightHandChargeMeterInstance", "BottomRightLockInstance.RightHandChargeMeterInstance.ChargeMeter_mc" },
+				{ "Combined", "fAltChargeMeterPosX", "fAltChargeMeterPosY" } },
 			  { { "Combined charge meter", "Interface", "bAltCharge" } }, {} },
 
 			{ "Compass", "fCompass", "bLockCompass",
-			  { { "Position", "fCompassPosX", "fCompassPosY" } },
+			  { { "Position", "fCompassPosX", "fCompassPosY", "CompassShoutMeterHolder", "CompassShoutMeterHolder.Compass" } },
 			  { { "Slim compass", "Interface", "bAltCompass" },
+				{ "Hide the compass (Dragonborn UI)", "*", "bHideCompass" },
 				{ "Hide enemy markers", "Gameplay", "bHideEnemyMarker" },
 				{ "Hide location markers", "Gameplay", "bHideLocations" },
 				{ "Hide undiscovered locations", "Gameplay", "bHideUndiscoveredLocations" },
@@ -41,23 +42,23 @@ namespace skyhud
 			{ "Compass markers", "fCompassMarker", "", {}, {}, {} },
 
 			{ "Crosshair", "fCrosshair", "bLockCrosshair",
-			  { { "Position", "fCrosshairPosX", "fCrosshairPosY" } },
+			  { { "Position", "fCrosshairPosX", "fCrosshairPosY", "Crosshair" } },
 			  { { "Dot crosshair", "Interface", "bDotCrosshair" } }, {} },
 
 			{ "Enemy health", "fEnemyHealth", "bLockEnemyHealth",
-			  { { "Position", "fEnemyHealthPosX", "fEnemyHealthPosY" } },
+			  { { "Position", "fEnemyHealthPosX", "fEnemyHealthPosY", "EnemyHealth_mc" } },
 			  { { "Hide enemy health bar", "Gameplay", "bHideEnemyHealth" } }, {} },
 
 			{ "Stealth meter", "fStealthMeter", "bLockStealthMeter",
-			  { { "Position", "fStealthMeterPosX", "fStealthMeterPosY" } },
+			  { { "Position", "fStealthMeterPosX", "fStealthMeterPosY", "StealthMeterInstance" } },
 			  { { "Hide the \"Hidden/Detected\" text", "Gameplay", "bHideStealthText" },
 				{ "Hide the stealth meter", "Gameplay", "bHideStealthMeter" } }, {} },
 
 			{ "Subtitles", "fSubtitle", "bLockSubtitle",
-			  { { "Position", "fSubtitlePosX", "fSubtitlePosY" } }, {}, {} },
+			  { { "Position", "fSubtitlePosX", "fSubtitlePosY", "SubtitleTextHolder" } }, {}, {} },
 
 			{ "Ammo / arrow count", "fArrowInfo", "bLockArrowInfo",
-			  { { "Position", "fArrowInfoPosX", "fArrowInfoPosY" } },
+			  { { "Position", "fArrowInfoPosX", "fArrowInfoPosY", "ArrowInfoInstance" } },
 			  { { "Ammo display", "Interface", "bAltArrow" } }, {} },
 
 			{ "Activate prompt", "fActivatePrompt", "bLockActivatePrompt",
@@ -72,14 +73,21 @@ namespace skyhud
 			  { { "Text alignment", "Interface", "sLocationInfoAlign", kAlign } } },
 
 			{ "Message info", "fMessageInfo", "bLockMessageInfo",
-			  { { "Position", "fMessageInfoPosX", "fMessageInfoPosY" } }, {}, {} },
+			  { { "Position", "fMessageInfoPosX", "fMessageInfoPosY", "MessagesBlock" } }, {}, {} },
 
 			{ "Objective text", "fObjectiveText", "bLockObjectiveText",
-			  { { "Position", "fObjectiveTextPosX", "fObjectiveTextPosY" } }, {},
+			  { { "Position", "fObjectiveTextPosX", "fObjectiveTextPosY", "QuestUpdateBaseInstance" } }, {},
 			  { { "Text alignment", "Interface", "sObjectiveAlign", kAlign } } },
 
 			{ "Level-up meter", "fLevelUpMeter", "bLockLevelUpMeter",
-			  { { "Position", "fLevelUpMeterPosX", "fLevelUpMeterPosY" } }, {}, {} },
+			  { { "Position", "fLevelUpMeterPosX", "fLevelUpMeterPosY" } },
+			  { { "Hide the level-up meter (Dragonborn UI)", "*", "bHideLevelUpMeter" } }, {} },
+
+			// Dragonborn UI separates the shout meter from the compass and adds these keys; the tab
+			// appears only when the user's file has them.
+			{ "Shout meter", "fShoutMeter", "bLockShoutMeter",
+			  { { "Position", "fShoutMeterPosX", "fShoutMeterPosY" } },
+			  { { "Separate shout meter (Dragonborn UI)", "*", "bAltShoutMeter" } }, {} },
 
 			{ "Animated letters", "fAnimatedLetters", "bLockAnimatedLetters",
 			  { { "Word wall letters", "", "fAnimLetterPosY" },

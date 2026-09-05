@@ -72,7 +72,7 @@ namespace skyhud
 	std::optional<std::string> Config::Get(const std::string& a_section, const std::string& a_key) const
 	{
 		for (const auto& line : _lines) {
-			if (line.isKey && line.section == a_section && line.key == a_key) {
+			if (line.isKey && (a_section == "*" || line.section == a_section) && line.key == a_key) {
 				return line.value;
 			}
 		}
@@ -82,7 +82,7 @@ namespace skyhud
 	bool Config::Set(const std::string& a_section, const std::string& a_key, const std::string& a_value)
 	{
 		for (auto& line : _lines) {
-			if (line.isKey && line.section == a_section && line.key == a_key) {
+			if (line.isKey && (a_section == "*" || line.section == a_section) && line.key == a_key) {
 				if (line.value != a_value) {
 					line.value = a_value;
 					// Rebuild raw as "key=value", preserving any leading indentation the file used.
