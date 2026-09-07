@@ -3,6 +3,11 @@ Added an in-game settings page for SkyHUD, one tab per HUD element, that reads a
 Added a live on-screen marker showing where each element will sit, sized to roughly match the widget and moving as you adjust it.
 Added per-element control of each marker's visibility and colour, with Health, Stamina and Magicka defaulting to their bar colours, plus a master on/off toggle.
 
+## 1.0.4 - 2026-09-07 - untested
+
+### Added
+- The settings page is shown in the game's language: Japanese, Korean, Chinese, Russian, German, French, Spanish, Italian, Polish and Czech translation files ship beside the DLL (Interface/Translations/SkyHudMenu_<language>.txt) and the page follows the Apocrypha Menu Framework's Language setting; English is the fallback. The framework is now looked up by its sort-first name first; the skyhud.config tool gained op=strings.
+
 ## 1.0.3 - 2026-09-05 - working
 
 ### Fixed

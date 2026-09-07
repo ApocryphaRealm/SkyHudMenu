@@ -18,7 +18,10 @@
 inline HMODULE GetMenuFrameworkModule() {
     static HMODULE menuFramework = nullptr;
     if (!menuFramework) {
-        menuFramework = GetModuleHandleW(L"ApocryphaMenuFramework");
+        menuFramework = GetModuleHandleW(L"!ApocryphaMenuFramework");
+        if (!menuFramework) {
+            menuFramework = GetModuleHandleW(L"ApocryphaMenuFramework");
+        }
         if (!menuFramework) {
             menuFramework = GetModuleHandleW(L"SKSEMenuFramework");
         }

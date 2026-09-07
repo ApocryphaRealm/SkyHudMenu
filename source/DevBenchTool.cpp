@@ -5,6 +5,7 @@
 #include "HudReload.h"
 #include "SkyHudState.h"
 #include "utils/Logger.h"
+#include "utils/Strings.h"
 
 #include <format>
 #include <string>
@@ -90,6 +91,10 @@ namespace DevBenchTool
 				a_write(a_sink, std::format(R"({{"ok":true,"op":"clips","clips":{}}})", preview::LiveReport()).c_str());
 				return;
 			}
+			if (op == "strings") {
+				a_write(a_sink, std::format(R"({{"ok":true,"op":"strings","strings":{}}})", strings::StatusJson()).c_str());
+				return;
+			}
 			a_write(a_sink, R"({"ok":false,"error":"unknown op"})");
 		}
 	}
@@ -114,7 +119,8 @@ namespace DevBenchTool
 			"op=set {section,key,value} changes one in memory. op=save writes skyhud.txt and reloads "
 			"the HUD to reload. op=reload re-reads skyhud.txt from disk. op=hudreload just forces "
 			"nothing live (SkyHUD reads the file at game start). op=hudinfo reports the saves waiting for a restart. "
-			"op=clips reads every known widget's live position, bounds and scale from the HUD movie.\","
+			"op=clips reads every known widget's live position, bounds and scale from the HUD movie. "
+			"op=strings reports the active language, source and loaded translation count.\","
 			"\"inputSchema\":{\"type\":\"object\",\"properties\":{\"op\":{\"type\":\"string\"},"
 			"\"section\":{\"type\":\"string\"},\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}},"
 			"\"readOnly\":false"

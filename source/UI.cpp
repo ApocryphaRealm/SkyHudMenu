@@ -7,6 +7,7 @@
 #include "SkyHudState.h"
 #include "utils/Toggle.h"
 #include "utils/Logger.h"
+#include "utils/Strings.h"
 
 #include <charconv>
 #include <cstdlib>
@@ -18,6 +19,28 @@ namespace UI
 	namespace
 	{
 		std::string g_status;
+
+		// The same deterministic label->key mapping tools/gen-translations.py uses for every
+		// HudElements.cpp table label (tab names, position/toggle/dropdown labels and dropdown
+		// option text): each run of alphanumerics becomes one word, capitalised on its first
+		// character, words are concatenated, and the prefix is prepended verbatim. Two labels
+		// with the same text (e.g. every plain "Position" tab) share one key on purpose - one
+		// translation serves both.
+		std::string DeriveKey(const char* a_prefix, const char* a_text)
+		{
+			std::string out{ a_prefix };
+			bool        startWord = true;
+			for (const char* p = a_text ? a_text : ""; *p; ++p) {
+				const unsigned char c = static_cast<unsigned char>(*p);
+				if (std::isalnum(c)) {
+					out += startWord ? static_cast<char>(std::toupper(c)) : static_cast<char>(c);
+					startWord = false;
+				} else {
+					startWord = true;
+				}
+			}
+			return out;
+		}
 
 		// --- small helpers over the string-valued skyhud.txt model -----------------------------
 
@@ -76,7 +99,8 @@ namespace UI
 		void ScaleControl(const char* a_key)
 		{
 			float v = ValueAsFloat("Scale", a_key, 1.0F);
-			if (ImGuiMCP::SliderFloat("Scale", &v, 0.25F, 3.0F, "%.2fx")) {
+			const std::string lbl = std::string(strings::TR("SHM_Scale", "Scale")) + "##" + a_key;
+			if (ImGuiMCP::SliderFloat(lbl.c_str(), &v, 0.25F, 3.0F, "%.2fx")) {
 				state::Config().Set("Scale", a_key, FloatToValue(v));
 			}
 		}
@@ -84,17 +108,17 @@ namespace UI
 		void PositionControl(const skyhud::PosPair& a_pos)
 		{
 			if (!HasKey("Position", a_pos.xKey) && !HasKey("Position", a_pos.yKey)) { return; }
-			ImGuiMCP::TextDisabled("%s", a_pos.label);
+			ImGuiMCP::TextDisabled("%s", strings::TR(DeriveKey("SHM_El_", a_pos.label).c_str(), a_pos.label));
 			if (HasKey("Position", a_pos.xKey)) {
 				float x = ValueAsFloat("Position", a_pos.xKey, 0.0F);
-				const std::string lbl = std::string("X##") + a_pos.xKey;
+				const std::string lbl = std::string(strings::TR("SHM_X", "X")) + "##" + a_pos.xKey;
 				if (ImGuiMCP::InputFloat(lbl.c_str(), &x, 1.0F, 10.0F, "%.0f")) {
 					state::Config().Set("Position", a_pos.xKey, FloatToValue(x));
 				}
 			}
 			if (HasKey("Position", a_pos.yKey)) {
 				float y = ValueAsFloat("Position", a_pos.yKey, 0.0F);
-				const std::string lbl = std::string("Y##") + a_pos.yKey;
+				const std::string lbl = std::string(strings::TR("SHM_Y", "Y")) + "##" + a_pos.yKey;
 				if (ImGuiMCP::InputFloat(lbl.c_str(), &y, 1.0F, 10.0F, "%.0f")) {
 					state::Config().Set("Position", a_pos.yKey, FloatToValue(y));
 				}
@@ -105,7 +129,7 @@ namespace UI
 		{
 			if (!HasKey(a_t.section, a_t.key)) { return; }
 			bool on = ValueAsBool(a_t.section, a_t.key);
-			if (ImGuiMCP::Toggle(a_t.label, &on)) {
+			if (ImGuiMCP::Toggle(strings::TR(DeriveKey("SHM_El_", a_t.label).c_str(), a_t.label), &on)) {
 				state::Config().Set(a_t.section, a_t.key, on ? "1" : "0");
 			}
 		}
@@ -115,15 +139,20 @@ namespace UI
 			if (!HasKey(a_d.section, a_d.key)) { return; }
 			const auto current = state::Config().Get(a_d.section, a_d.key).value_or("");
 			int         index = 0;
-			std::vector<const char*> labels;
-			labels.reserve(a_d.options.size());
+			// Option text is rebuilt from TR'd entries every frame (plan 2.2); labelStore owns the
+			// translated bytes for this call so the const char* pointers handed to Combo stay valid.
+			std::vector<std::string> labelStore;
+			labelStore.reserve(a_d.options.size());
 			for (std::size_t i = 0; i < a_d.options.size(); ++i) {
-				labels.push_back(a_d.options[i].first);
+				labelStore.push_back(strings::TR(DeriveKey("SHM_El_", a_d.options[i].first).c_str(), a_d.options[i].first));
 				if (current == a_d.options[i].second) {
 					index = static_cast<int>(i);
 				}
 			}
-			if (ImGuiMCP::Combo(a_d.label, &index, labels.data(), static_cast<int>(labels.size()))) {
+			std::vector<const char*> labels;
+			labels.reserve(labelStore.size());
+			for (const auto& s : labelStore) { labels.push_back(s.c_str()); }
+			if (ImGuiMCP::Combo(strings::TR(DeriveKey("SHM_El_", a_d.label).c_str(), a_d.label), &index, labels.data(), static_cast<int>(labels.size()))) {
 				state::Config().Set(a_d.section, a_d.key, a_d.options[static_cast<std::size_t>(index)].second);
 			}
 		}
@@ -134,20 +163,22 @@ namespace UI
 			auto& ghosts = settings::preview::Ghosts();
 			if (a_index < ghosts.size()) {
 				bool gshow = ghosts[a_index].show;
-				if (ImGuiMCP::Toggle("Show this ghost on screen", &gshow)) {
+				if (ImGuiMCP::Toggle(strings::TR("SHM_ShowGhost", "Show this ghost on screen"), &gshow)) {
 					ghosts[a_index].show = gshow;
 					settings::Save();
 				}
 				if (gshow) {
+					std::vector<std::string> colorStore;
 					std::vector<const char*> colors;
 					for (int c = 0; c < preview::PaletteCount(); ++c) {
-						colors.push_back(preview::PaletteName(c));
+						colorStore.push_back(strings::TR(DeriveKey("SHM_Col_", preview::PaletteName(c)).c_str(), preview::PaletteName(c)));
 					}
+					for (const auto& cs : colorStore) { colors.push_back(cs.c_str()); }
 					int ci = ghosts[a_index].color;
 					if (ci < 0 || ci >= preview::PaletteCount()) {
 						ci = 0;
 					}
-					if (ImGuiMCP::Combo("Ghost colour", &ci, colors.data(), static_cast<int>(colors.size()))) {
+					if (ImGuiMCP::Combo(strings::TR("SHM_GhostColour", "Ghost colour"), &ci, colors.data(), static_cast<int>(colors.size()))) {
 						ghosts[a_index].color = ci;
 						settings::Save();
 					}
@@ -159,11 +190,11 @@ namespace UI
 			}
 			if (HasKey("Position", a_el.lockKey)) {
 				bool locked = ValueAsBool("Position", a_el.lockKey);
-				if (ImGuiMCP::Toggle("Locked (use SkyHUD's default position)", &locked)) {
+				if (ImGuiMCP::Toggle(strings::TR("SHM_Locked", "Locked (use SkyHUD's default position)"), &locked)) {
 					state::Config().Set("Position", a_el.lockKey, locked ? "1" : "0");
 				}
 				if (!locked && !a_el.positions.empty()) {
-					ImGuiMCP::SeparatorText("Position");
+					ImGuiMCP::SeparatorText(strings::TR("SHM_Position", "Position"));
 					for (const auto& p : a_el.positions) {
 						PositionControl(p);
 					}
@@ -172,7 +203,7 @@ namespace UI
 			bool anyToggle = false;
 			for (const auto& t : a_el.toggles) { anyToggle |= HasKey(t.section, t.key); }
 			if (anyToggle) {
-				ImGuiMCP::SeparatorText("Options");
+				ImGuiMCP::SeparatorText(strings::TR("SHM_Options", "Options"));
 				for (const auto& t : a_el.toggles) {
 					ToggleControl(t);
 				}
@@ -199,25 +230,25 @@ namespace UI
 
 	void __stdcall RenderPage()
 	{
+		strings::Tick();
+
 		// Pick up any external edits each time the page draws while it is not dirty.
 		if (!state::Config().loaded()) {
 			state::LoadFromDisk();
 		}
 		if (!state::Config().loaded()) {
-			ImGuiMCP::TextWrapped("skyhud.txt was not found. This menu edits SkyHUD's settings, so "
-								  "SkyHUD (or a preset that provides skyhud.txt) must be installed.");
+			ImGuiMCP::TextWrapped("%s", strings::TR("SHM_NoConfig", "skyhud.txt was not found. This menu edits SkyHUD's settings, so SkyHUD (or a preset that provides skyhud.txt) must be installed."));
 			return;
 		}
 
-		ImGuiMCP::TextWrapped("Editing %s", state::Config().path().c_str());
-		ImGuiMCP::TextDisabled("Each tab is one HUD element. Save writes skyhud.txt; SkyHUD reads it when the "
-							   "game starts, so a saved change shows after a restart.");
+		ImGuiMCP::TextWrapped(strings::TR("SHM_EditingPath", "Editing %s"), state::Config().path().c_str());
+		ImGuiMCP::TextDisabled("%s", strings::TR("SHM_TabHint", "Each tab is one HUD element. Save writes skyhud.txt; SkyHUD reads it when the game starts, so a saved change shows after a restart."));
 
-		if (ImGuiMCP::Toggle("Show on-screen position markers", &settings::preview::show)) {
+		if (ImGuiMCP::Toggle(strings::TR("SHM_ShowMarkers", "Show on-screen position markers"), &settings::preview::show)) {
 			settings::Save();
 		}
 		ImGuiMCP::SameLine(0.0F, 8.0F);
-		ImGuiMCP::TextDisabled("ghosts of every positioned element - visible with the menu closed too");
+		ImGuiMCP::TextDisabled("%s", strings::TR("SHM_MarkersHint", "ghosts of every positioned element - visible with the menu closed too"));
 
 		preview::DrawAll();
 
@@ -230,7 +261,9 @@ namespace UI
 				if (!ElementPresent(els[i])) {
 					continue;  // none of its keys are in this file
 				}
-				if (ImGuiMCP::BeginTabItem(els[i].name)) {
+				// "###name" pins the tab's ImGui id to the English name, so a language switch keeps the selected tab.
+				const std::string tabLabel = std::string(strings::TR(DeriveKey("SHM_El_", els[i].name).c_str(), els[i].name)) + "###" + els[i].name;
+				if (ImGuiMCP::BeginTabItem(tabLabel.c_str())) {
 					RenderElement(els[i], i);
 					ImGuiMCP::EndTabItem();
 				}
@@ -239,15 +272,15 @@ namespace UI
 		}
 
 		ImGuiMCP::SeparatorText("");
-		ImGuiMCP::TextDisabled("SkyHUD reads skyhud.txt only when the game starts, so a saved change shows after a");
-		ImGuiMCP::TextDisabled("restart - the markers show now where each element will land.");
-		if (ImGuiMCP::Button("Save (shows after a restart)")) {
-			g_status = state::WriteAndApply() ? "Saved to skyhud.txt. Restart the game to see it in the HUD."
-											  : "Could not write skyhud.txt. See the log.";
+		ImGuiMCP::TextDisabled("%s", strings::TR("SHM_FooterA", "SkyHUD reads skyhud.txt only when the game starts, so a saved change shows after a"));
+		ImGuiMCP::TextDisabled("%s", strings::TR("SHM_FooterB", "restart - the markers show now where each element will land."));
+		if (ImGuiMCP::Button(strings::TR("SHM_SaveBtn", "Save (shows after a restart)"))) {
+			g_status = state::WriteAndApply() ? strings::TR("SHM_StatusSaved", "Saved to skyhud.txt. Restart the game to see it in the HUD.")
+											  : strings::TR("SHM_StatusSaveFail", "Could not write skyhud.txt. See the log.");
 		}
-		if (ImGuiMCP::Button("Reload from file")) {
+		if (ImGuiMCP::Button(strings::TR("SHM_ReloadBtn", "Reload from file"))) {
 			state::LoadFromDisk();
-			g_status = "Reloaded skyhud.txt from disk.";
+			g_status = strings::TR("SHM_StatusReloaded", "Reloaded skyhud.txt from disk.");
 		}
 		if (!g_status.empty()) {
 			ImGuiMCP::TextWrapped("%s", g_status.c_str());

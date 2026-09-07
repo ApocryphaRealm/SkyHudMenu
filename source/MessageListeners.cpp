@@ -3,6 +3,7 @@
 #include "SkyHudState.h"
 #include "UI.h"
 #include "utils/Logger.h"
+#include "utils/Strings.h"
 
 #include <SKSE/SKSE.h>
 
@@ -21,6 +22,7 @@ void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 		// skyhud.txt is a loose Data file; it is readable by now. Load it so the page and the
 		// DevBench tool have it in hand, and make the last DevBench registration attempt.
 		state::LoadFromDisk();
+		strings::Configure("SkyHudMenu");
 		DevBenchTool::Init(/* a_lastAttempt = */ true);
 		break;
 	default:

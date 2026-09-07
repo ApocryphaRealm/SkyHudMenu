@@ -27,9 +27,16 @@ namespace skyhud
 		_dirty = false;
 		_path = a_path;
 
+		static std::string s_lastMissing;  // the path last warned about; cleared by a successful load
 		std::ifstream in(_path, std::ios::binary);
 		if (!in) {
-			logger::warn("skyhud.txt not found at '{}' - SkyHUD (or a preset providing skyhud.txt) is not installed", _path);
+			// The page re-tries the load every frame it draws without a file, so this warns on the
+			// transition only (rule 14: nothing per-frame logs unconditionally); the next successful
+			// load resets it so a later removal warns again.
+			if (s_lastMissing != _path) {
+				s_lastMissing = _path;
+				logger::warn("skyhud.txt not found at '{}' - SkyHUD (or a preset providing skyhud.txt) is not installed", _path);
+			}
 			return false;
 		}
 
@@ -65,6 +72,8 @@ namespace skyhud
 		}
 
 		_loaded = true;
+
+		s_lastMissing.clear();
 		logger::info("Loaded skyhud.txt from '{}': {} line(s), {} setting(s)", _path, _lines.size(), keyCount);
 		return true;
 	}
