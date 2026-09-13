@@ -70,8 +70,8 @@ API and exposes the screen-wide draw list; Apocrypha Menu Framework 1.5.8+ does.
 
 LICENCE
 -------
-MIT. Original work; ships no SkyHUD files. SkyHUD is by Fhaarkas and is required separately.
-Built on the Apocrypha Menu Framework (MIT) and CommonLibSSE-NG. The DevBench C-ABI consumer
+GPL-3.0-or-later. Original work; ships no SkyHUD files. SkyHUD is by Fhaarkas and is required separately.
+Built on the Apocrypha Menu Framework (GPL-3.0-or-later) and CommonLibSSE-NG. The DevBench C-ABI consumer
 header is vendored (MIT); DevBench itself is an optional runtime tool, never linked.
 
 
@@ -79,3 +79,9 @@ BUILDING
 --------
 Requires Visual Studio 2022, CMake and a vcpkg checkout (VCPKG_ROOT set). Run configure.bat then
 build.bat; the DLL is written to build/relwithdebinfo-se-only.
+
+## Licence
+
+GPL-3.0-or-later - see `LICENSE` and `NOTICE.md`; components under other licences, with their notices, are in
+`THIRD_PARTY_NOTICES.md`. Versions before 2026-09-13 carried an MIT licence in error: the Skyrim 1.7.x build links
+CommonLibSSE-NG 7.2.0, which is GPL-3.0-or-later.
