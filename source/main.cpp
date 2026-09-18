@@ -1,5 +1,6 @@
 #include "Settings.h"
 
+#include "utils/AddressLibraryGuard.h"
 #include "utils/Logger.h"
 
 void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg);
@@ -17,6 +18,14 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	}
 
 	logger::info("Loading {} {}...", plugin->GetName(), plugin->GetVersion());
+
+	// Address Library pre-check (the guard every mod of ours carries), BEFORE SKSE::Init, which opens the
+	// Address Library itself (logic library 6026): a missing file gets a message naming it and the plugin
+	// loads inert instead of CommonLibSSE-NG's bare failure line.
+	if (!AddressLibraryGuard::Guard("SkyHUD Settings Menu"))
+	{
+		return true;
+	}
 
 	SKSE::Init(a_skse);
 	logger::debug("SKSE core APIs initialized");

@@ -176,11 +176,17 @@ namespace preview
 			for (const auto& pp : el.positions) {
 				const auto vx = (pp.xKey && pp.xKey[0]) ? state::Config().Get("Position", pp.xKey) : std::nullopt;
 				const auto vy = (pp.yKey && pp.yKey[0]) ? state::Config().Get("Position", pp.yKey) : std::nullopt;
-				if (!((vx && !vx->empty()) || (vy && !vy->empty()))) {
-					continue;  // no explicit coordinate set for this pair
+				const bool hasX = vx && !vx->empty(), hasY = vy && !vy->empty();
+				// An empty coordinate is not 0: SkyHUD leaves that axis where the HUD put the widget. The
+				// ghost starts where the widget IS (the owner, 2026-09-18), so a missing axis is read from
+				// the live clip; a pair with no clip and no coordinate at all has nothing to show.
+				float lx = 0.0F, ly = 0.0F;
+				const bool live = (!hasX || !hasY) && LiveStart(pp.clip, lx, ly);
+				if (!hasX && !hasY && !live) {
+					continue;  // no explicit coordinate and no live widget for this pair
 				}
-				const float px = AsFloat("Position", pp.xKey ? pp.xKey : "", 0.0F);
-				const float py = AsFloat("Position", pp.yKey ? pp.yKey : "", 0.0F);
+				const float px = hasX ? AsFloat("Position", pp.xKey, 0.0F) : lx;
+				const float py = hasY ? AsFloat("Position", pp.yKey, 0.0F) : ly;
 				const std::string label = el.positions.size() > 1 ? std::string(el.name) + " - " + pp.label : std::string(el.name);
 				Marker(dl, sw, sh, el.name, label.c_str(), px, py, sc, color, AnchorFor((pp.measure && pp.measure[0]) ? pp.measure : pp.clip, px, py, sc));
 			}
@@ -212,6 +218,21 @@ namespace preview
 		if (!bnum("xMin", out.xMin) || !bnum("xMax", out.xMax) || !bnum("yMin", out.yMin) || !bnum("yMax", out.yMax)) { return out; }
 		out.ok = true;
 		return out;
+	}
+
+	LiveClip ReadLiveCached(const char* a_clip)
+	{
+		return Cached(a_clip);
+	}
+
+	bool LiveStart(const char* a_clip, float& a_x, float& a_y)
+	{
+		if (!a_clip || !a_clip[0]) { return false; }
+		const auto lc = Cached(a_clip);
+		if (!lc.ok) { return false; }
+		a_x = lc.x;
+		a_y = lc.y;
+		return true;
 	}
 
 	std::string LiveReport()

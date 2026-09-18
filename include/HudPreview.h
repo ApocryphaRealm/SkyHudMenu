@@ -42,6 +42,16 @@ namespace preview
 	};
 	// Read it now (a handful of Scaleform calls; not for every frame - DrawAll caches).
 	LiveClip ReadLive(const char* a_clip);
+	// The same, through the 500 ms cache DrawAll uses.
+	LiveClip ReadLiveCached(const char* a_clip);
+
+	// Where a position pair's widget is RIGHT NOW, in the file's own units (the clip's _x/_y, which is
+	// what SkyHUD writes the file's X/Y into). The owner, 2026-09-18: "make the starting locations of the
+	// overlay ghosts the current locations of each of the widgets instead of starting at 0,0" - Norden
+	// UI's skyhud.txt leaves many coordinates EMPTY (SkyHUD then keeps the widget where the HUD put it),
+	// and an empty coordinate read as 0 put the ghost and the X/Y boxes at the corner. Returns false when
+	// the pair exposes no clip or the HUD movie is not up.
+	bool LiveStart(const char* a_clip, float& a_x, float& a_y);
 	// A JSON line per position pair, for the test tool.
 	std::string LiveReport();
 }

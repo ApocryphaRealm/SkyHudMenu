@@ -105,19 +105,33 @@ namespace UI
 			}
 		}
 
+		// True when the key is in the file with a value; an EMPTY value (Norden UI ships many) means
+		// "leave this axis where the HUD put it", not 0.
+		bool HasValue(const char* a_section, const char* a_key)
+		{
+			if (!a_key || !a_key[0]) { return false; }
+			const auto v = state::Config().Get(a_section, a_key);
+			return v && !v->empty();
+		}
+
 		void PositionControl(const skyhud::PosPair& a_pos)
 		{
 			if (!HasKey("Position", a_pos.xKey) && !HasKey("Position", a_pos.yKey)) { return; }
 			ImGuiMCP::TextDisabled("%s", strings::TR(DeriveKey("SHM_El_", a_pos.label).c_str(), a_pos.label));
+			// An axis the file leaves empty starts from where the widget is right now (the owner,
+			// 2026-09-18: the ghosts and the boxes were starting at 0,0). Nothing is written until the
+			// player changes the number, so an untouched empty axis stays empty in the file.
+			float lx = 0.0F, ly = 0.0F;
+			const bool live = (!HasValue("Position", a_pos.xKey) || !HasValue("Position", a_pos.yKey)) && preview::LiveStart(a_pos.clip, lx, ly);
 			if (HasKey("Position", a_pos.xKey)) {
-				float x = ValueAsFloat("Position", a_pos.xKey, 0.0F);
+				float x = HasValue("Position", a_pos.xKey) ? ValueAsFloat("Position", a_pos.xKey, 0.0F) : (live ? lx : 0.0F);
 				const std::string lbl = std::string(strings::TR("SHM_X", "X")) + "##" + a_pos.xKey;
 				if (ImGuiMCP::InputFloat(lbl.c_str(), &x, 1.0F, 10.0F, "%.0f")) {
 					state::Config().Set("Position", a_pos.xKey, FloatToValue(x));
 				}
 			}
 			if (HasKey("Position", a_pos.yKey)) {
-				float y = ValueAsFloat("Position", a_pos.yKey, 0.0F);
+				float y = HasValue("Position", a_pos.yKey) ? ValueAsFloat("Position", a_pos.yKey, 0.0F) : (live ? ly : 0.0F);
 				const std::string lbl = std::string(strings::TR("SHM_Y", "Y")) + "##" + a_pos.yKey;
 				if (ImGuiMCP::InputFloat(lbl.c_str(), &y, 1.0F, 10.0F, "%.0f")) {
 					state::Config().Set("Position", a_pos.yKey, FloatToValue(y));

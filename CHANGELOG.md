@@ -3,6 +3,20 @@ Added an in-game settings page for SkyHUD, one tab per HUD element, that reads a
 Added a live on-screen marker showing where each element will sit, sized to roughly match the widget and moving as you adjust it.
 Added per-element control of each marker's visibility and colour, with Health, Stamina and Magicka defaulting to their bar colours, plus a master on/off toggle.
 
+## 1.0.6 - 2026-09-18 - untested
+
+### Fixed
+- **The overlay ghosts and the X/Y boxes start where the widget IS.** A coordinate the file leaves empty (Norden UI's
+  skyhud.txt leaves many, and SkyHUD then keeps that axis where the HUD put the widget) was read as 0, so the ghost and
+  the number started in the top-left corner and the player had to drag each one across the screen before it meant
+  anything (the owner, 2026-09-18: *"make the starting locations of the overlay ghosts the current locations of each of
+  the widgets instead of starting at 0,0"*). An empty axis is now read from the live HUD clip's own position, for the
+  ghost and for the box, and nothing is written to the file until the player changes the number.
+
+### Changed
+- The Address Library pre-check runs before anything else at load: a missing Address Library file for the game version
+  gets a message naming the file and the plugin loads inert, instead of CommonLibSSE-NG's bare failure line.
+
 ## 1.0.4 - 2026-09-07 - working
 
 ### Added
